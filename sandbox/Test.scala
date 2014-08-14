@@ -31,6 +31,10 @@ object Test {
 
     var date = new Date()
     var exception = new Exception()
+
+    var lst = List[String]()
+    var lnDt = ""
+    var lnExc = ""
         
     for (line <- Source.stdin.getLines) {
         
@@ -39,7 +43,10 @@ object Test {
         
         var l = (date.getPatterns()(k) findAllIn line).mkString("|")
         
-        if(l.length>0) println(l + " Match With:" + date.getPatterns()(k) + " Date Formater:" + k )
+        if(l.length>0) {
+          //	println(l + " Match With:" + date.getPatterns()(k) + " Date Formater:" + k )
+          lnDt = l
+	}
       }   
       
       exception.getPatterns().keys.foreach { 
@@ -47,8 +54,25 @@ object Test {
         
         var l = (exception.getPatterns()(k) findAllIn line).mkString(",")
         
-        if(l.length>0) println(l + " Match With:" + exception.getPatterns()(k) + " Exception Formater:" + k )
-      }
-    }
-  }
-}
+        if(l.length>0) {
+          //	println(l + " Match With:" + exception.getPatterns()(k) + " Exception Formater:" + k )
+          lnExc = l
+	}
+
+	if((lnDt.length>0) {
+            if(lnExc.length>0)) {
+              println(lnDt + " " + lnExc)
+              lnDt = ""
+              lnExc = ""
+            }
+          }
+           /*
+            if(lst.length >= 2) {
+            println(lst.mkString(","));
+            lst = List()
+            }
+            */
+           }
+           }
+           }
+           }
