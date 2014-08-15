@@ -3,11 +3,14 @@ import scala.util.matching.Regex
 import java.text.SimpleDateFormat
 
 class Patterns {
+  
+  def isDate = false
+  
   val patterns = Map(
     "Default" -> new Regex(".*")
   )
 
-  def getPatterns(): Map[String, Regex] = {
+  def get(): Map[String, Regex] = {
     patterns
   }
 }
@@ -18,6 +21,8 @@ class Date() extends Patterns() {
     "MMM dd, yyyy H:mm:ss a" -> new Regex("[A-Z][a-z]{2} [0-3][0-9], [2-9][0-9]{3} [0-9]{1,2}:[0-5][0-9]:[0-5][0-9] [AP]M"),
     "M/dd/yy H:mm:ss:SSS" -> new Regex("[0-9]{1,2}/[0-3][0-9]/[0-9]{2} [0-9]{1,2}:[0-5][0-9]:[0-5][0-9]:[0-9]{3}")
   )
+  
+  override def isDate = true;
 }
 
 class Exception() extends Patterns() {
@@ -32,54 +37,57 @@ class LogInfo() extends Patterns() {
   )
 }
 
+class File() extends Patterns() {
+  override val patterns = Map(
+    "File" -> new Regex("[a-zA-Z]+\\.java")
+  )
+}
+
 object Test {
 
   def main(args: Array[String]) {
 
     val separator = ","
-    val date = new Date()
-    val info = new LogInfo()
-    val exception = new Exception()
-
-    var lnDt = ""
-    var lnExc = ""
-    var lnInf = ""
-
+    
+    var lstData:List[String] =  List()
+    
+    val patterns:List[Patterns] = List(new Date(), new LogInfo(), new Exception())
+    
+    var hasDate = false
+    
     for (line <- Source.stdin.getLines) {
 
-      info.getPatterns().keys.foreach {
-        k =>
-          val l = (info.getPatterns()(k) findAllIn line).mkString(separator)
-
-          if (l.length > 0) {
-            lnInf = l
-          }
+      if(lstData.length == 0){
+        hasDate = false
+      } else if( hasDate && (lstData.length >= 2)) {
+        println(lstData.toString())
+        lstData = List()
       }
-      date.getPatterns().keys.foreach {
-        k =>
-
-          val l = (date.getPatterns()(k) findAllIn line).mkString(separator)
-
-          if (l.length > 0) {
-            val fmt = new SimpleDateFormat(k)
-            lnDt = fmt.parse(l).toString()
+      
+      for(pattern <- patterns) {
+        pattern.get().keys.foreach {
+          key =>
+          var str = ( pattern.get()(key) findAllIn line).mkString(separator)
+          
+          if(str.length>0) {
+            if(pattern.isDate) {
+              if (hasDate == false) {
+                val fmt = new SimpleDateFormat(key)
+                str = fmt.parse(str).toString()
+              
+                hasDate = true
+                lstData = lstData ::: List(str)
+              }
+            } else {
+              lstData = lstData ::: List(str)
+            }
           }
+        }
       }
-
-      exception.getPatterns().keys.foreach {
-        k =>
-
-          val l = (exception.getPatterns()(k) findAllIn line).mkString(separator)
-
-          if (l.length > 0) {
-            lnExc = l
-          }
-
-          if ((lnDt.length > 0) && (lnExc.length > 0)) {
-            println(lnDt + " " + lnInf + " " + lnExc)
-            lnDt = ""
-            lnExc = ""
-          }
+      
+      if(hasDate && (lstData.length > 1)) {
+        println(lstData.toString())
+        lstData = List()
       }
     }
   }
